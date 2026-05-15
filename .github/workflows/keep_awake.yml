@@ -1,0 +1,31 @@
+name: Wake Up CleanCycle App
+
+on:
+  schedule:
+    # Runs every 4 hours (At minute 0 past every 4th hour)
+    - cron: '0 */4 * * *'
+  workflow_dispatch: # Allows you to trigger this manually from the Actions tab
+
+jobs:
+  wake-streamlit:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-node-version: '3.10'
+
+    - name: Install Dependencies
+      run: |
+        pip install playwright
+        playwright install chromium
+
+    - name: Execute Wake Up Script
+      env:
+        # Change this if your actual URL uses a different format
+        STREAMLIT_APP_URL: "https://cleancycle.streamlit.app/" 
+      run: python wake_app.py
