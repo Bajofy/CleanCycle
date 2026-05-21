@@ -185,7 +185,7 @@ tailwind.config = {
     
     .block-container { 
         padding-top: 1.2rem !important; 
-        max-width: 1400px !important; 
+        max-width: 1500px !important; 
         padding-left: 2rem !important;
         padding-right: 2rem !important;
         margin: 0 auto !important; 
