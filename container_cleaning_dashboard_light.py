@@ -183,7 +183,6 @@ tailwind.config = {
     [data-testid="stAppViewContainer"] > .main,
     [data-testid="stHeader"] { background: transparent !important; }
     
-    /* MODIFIKASI: Block Container Max Width 1500px */
     .block-container { 
         padding-top: 1.2rem !important; 
         max-width: 1500px !important; 
@@ -816,7 +815,6 @@ def render_cleaning_panel():
             unsafe_allow_html=True,
         )
 
-# PERBAIKAN KEY DI MODAL DIALOG
 @st.dialog("Daftar Lengkap Antrian Cleaning", width="large")
 def show_all_queue_dialog(scored_queue):
     for i, (item, score) in enumerate(scored_queue):
@@ -827,7 +825,6 @@ def show_all_queue_dialog(scored_queue):
         with col_item:
             render_queue_item(item, score)
         with col_del:
-            # Tambahkan index 'i' agar key unik meskipun ada ID "SPNU " yang sama
             if st.button("🗑️ Hapus", key=f"modal_del_{i}_{item['id']}", help="Hapus antrian"):
                 st.session_state.queue.remove(item)
                 st.rerun()
@@ -925,21 +922,9 @@ def render_queue_list_fragment():
     if displayed == 0:
         st.info("Tidak ada kontainer yang sesuai filter.")
 
-
-def render_queue_panel():
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        render_stat_card("Selesai", st.session_state.completed_today, "✅", "rose")
-    with c2:
-        render_stat_card("Siap Pakai", st.session_state.available, "📦", "sky")
-    with c3:
-        queue_count = len(st.session_state.queue) + count_active_cleaning()
-        render_stat_card("Antrian", queue_count, "⏳", "amber")
-    st.markdown('<div class="h-px bg-amber-200/80 my-4"></div>', unsafe_allow_html=True)
-    st.markdown(
-        '<h4 class="text-slate-900 font-bold mb-3 text-lg">📋 Antrian Cleaning</h4>',
-        unsafe_allow_html=True,
-    )
+# PERBAIKAN: Fungsi baru agar progress bar "Sedang dikerjakan" di Antrian berjalan otomatis tiap detik
+@st.fragment(run_every=1)
+def render_active_jobs_in_queue_fragment():
     for i, job in enumerate(get_in_progress_jobs()):
         elapsed = (datetime.now() - job["start_time"]).total_seconds()
         progress_pct = (
@@ -959,6 +944,26 @@ def render_queue_panel():
             f"{cc_card_close()}"
         )
         st.markdown(active_html, unsafe_allow_html=True)
+
+def render_queue_panel():
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        render_stat_card("Selesai", st.session_state.completed_today, "✅", "rose")
+    with c2:
+        render_stat_card("Siap Pakai", st.session_state.available, "📦", "sky")
+    with c3:
+        queue_count = len(st.session_state.queue) + count_active_cleaning()
+        render_stat_card("Antrian", queue_count, "⏳", "amber")
+        
+    st.markdown('<div class="h-px bg-amber-200/80 my-4"></div>', unsafe_allow_html=True)
+    st.markdown(
+        '<h4 class="text-slate-900 font-bold mb-3 text-lg">📋 Antrian Cleaning</h4>',
+        unsafe_allow_html=True,
+    )
+    
+    # Memanggil fragment agar kartunya auto-refresh setiap 1 detik
+    render_active_jobs_in_queue_fragment()
+    
     if st.session_state.queue:
         col_f1, col_f2, col_f3 = st.columns(3)
         with col_f1:
